@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><title>URL Classifier</title></head>
+<body>
+    <h2>Phishing URL Classifier</h2>
+    <input type="text" id="urlInput" placeholder="Enter a URL"/>
+    <button onclick="submitURL()">Check</button>
+    <div id="result" style="margin-top:20px;"></div>
+
+    <script>
+      async function submitURL() {
+        const url = document.getElementById('urlInput').value;
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "Loading...";
+
+        try {
+          const response = await fetch("http://localhost:5000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            resultDiv.innerHTML = `
+              <strong>Prediction:</strong> ${data.prediction}<br/>
+              <strong>Probability:</strong><br/>
+              - Phishing: ${(data.probability.phishing * 100).toFixed(2)}%<br/>
+              - Legitimate: ${(data.probability.legitimate * 100).toFixed(2)}%<br/>
+              ${data.warnings ? `<p style="color:orange;"><strong>${data.warnings}</strong></p>` : ""}
+            `;
+          } else {
+            resultDiv.innerHTML = `<p style="color:red;"><strong>Error:</strong> ${data.error}</p>`;
+          }
+
+        } catch (error) {
+          resultDiv.innerHTML = `<p style="color:red;"><strong>Unexpected Error:</strong> ${error.message}</p>`;
+        }
+      }
+    </script>
+</body>
+</html>
